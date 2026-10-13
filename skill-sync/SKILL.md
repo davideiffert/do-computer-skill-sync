@@ -44,6 +44,13 @@ other is reported.
 A computer that is not reachable right now is skipped for this run and reported; nothing about its skills
 changes.
 
+## Your copy
+
+Your copy of a skill is the one in your own skill list, which you manage with your skill tool: `list`
+shows them, `view` reads one (and its other files, with `path`), `create` adds one, and `write_file` and
+`patch` change its files. Your copy is never a folder on a computer. Copying files into a folder does not
+give you the skill; only the skill tool does. After a run, every synced skill must show in `list`.
+
 ## The record
 
 Keep a record in your Library at `~/library/skill-sync/<your name>.json` (create it if needed). For each
@@ -61,8 +68,9 @@ From inside the folder:
 find . -type f ! -name .DS_Store | LC_ALL=C sort | while IFS= read -r f; do printf '%s\n' "$f"; cat "$f"; done | sha256sum
 ```
 
-On a Mac use `shasum -a 256` in place of `sha256sum`. Fingerprint your own copy the same way: load the
-skill so its files are in your working folder, and run the command there. Equal fingerprints mean equal
+On a Mac use `shasum -a 256` in place of `sha256sum`. Fingerprint your own copy the same way: read
+each of its files with your skill tool, write them into a scratch folder in your working folder, run the
+command there, then remove the scratch folder. Equal fingerprints mean equal
 content. Do not compare file dates; copying a file changes its date without changing it.
 
 ## Each run
