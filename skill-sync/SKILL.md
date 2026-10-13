@@ -58,20 +58,22 @@ synced skill it holds where the skill came from, the **fingerprint** both copies
 and when:
 
 ```json
-{ "skills": { "writing-voice": { "source": "my-server:~/.agents/skills/writing-voice", "fingerprint": "3f1a...", "syncedAt": "2026-10-13T08:00:00Z" } } }
+{ "skills": { "writing-voice": { "source": "my-server:~/.agents/skills/writing-voice", "files": { "SKILL.md": "3f1a...", "references/examples.md": "9c0b..." }, "syncedAt": "2026-10-13T08:00:00Z" } } }
 ```
 
-A fingerprint is a hash of a skill folder's exact contents: every file's path and text, in a fixed order.
-From inside the folder:
+A skill's fingerprint is the list of its files, each with the hash of its contents. From inside the
+skill's folder:
 
 ```sh
-find . -type f ! -name .DS_Store | LC_ALL=C sort | while IFS= read -r f; do printf '%s\n' "$f"; cat "$f"; done | sha256sum
+find . -type f ! -name .DS_Store ! -name '*.pyc' ! -path '*/__pycache__/*' -exec sha256sum {} +
 ```
 
-On a Mac use `shasum -a 256` in place of `sha256sum`. Fingerprint your own copy the same way: read
-each of its files with your skill tool, write them into a scratch folder in your working folder, run the
-command there, then remove the scratch folder. Equal fingerprints mean equal
-content. Do not compare file dates; copying a file changes its date without changing it.
+On a Mac use `shasum -a 256` in place of `sha256sum`. Each line is a hash and a file path. Two
+fingerprints are equal when they hold the same paths with the same hashes, whatever order the lines come
+in; compare them yourself, path by path, instead of sorting or combining them in the shell, since sorting
+differs between machines. Fingerprint your own copy the same way: read each of its files with your skill
+tool, write them into a scratch folder in your working folder, run the command there, then remove the
+scratch folder. Do not compare file dates; copying a file changes its date without changing it.
 
 ## Each run
 
