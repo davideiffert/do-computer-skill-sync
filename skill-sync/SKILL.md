@@ -6,115 +6,85 @@ description: Keep some of your skills in step with skill folders on your compute
 # Skill sync
 
 You keep some of your skills in step with folders on computers you can use, so the person edits a skill
-in one place and you have it natively, and what you improve reaches their other tools. Both copies stay
-in the same `SKILL.md` format, so nothing is translated.
+once and every agent of theirs has it. Both sides use the same `SKILL.md` format.
 
 ## Setting up
 
-When the person asks you to set up skill sync, or just installed this skill and said "set it up":
+When the person asks you to set up skill sync:
 
-1. **Find their skill folders.** On each computer you can use, look for `~/.claude/skills`,
-   `~/.codex/skills` and `~/.agents/skills`, and any folder they name. A skill folder holds a `SKILL.md`.
-   Folders may be symlinks; follow them. Show what you found: each folder and how many skills are in it.
-2. **Ask what to sync.** Whole folders, some skills from a folder, or a folder except a few. Suggest a
-   choice from what you know of them, and say that your always-on skill list shows about 40 skills
-   before it stops growing (the rest still work, by name).
-3. **Make the automation.** Create one daily automation, at 5:00 in their time zone unless they want
-   another time. Its instructions are "Use skill-sync." followed by the sources exactly as they chose
-   them, for example: "Use skill-sync. Sources: my laptop, every skill in ~/.claude/skills except
-   drafts; and my server, from ~/.agents/skills: writing, research."
-4. **Run the first sync now**, and end with the report below.
+1. **Find their skill folders** on each computer you can use: `~/.claude/skills`, `~/.codex/skills`,
+   `~/.agents/skills`, and any they name. A skill is a folder holding a `SKILL.md`; follow symlinks.
+   Show each folder and how many skills it holds.
+2. **Ask what to sync**: whole folders, some skills, or a folder except a few. Suggest a choice, and
+   mention that your skill list in the prompt has room for about 40 skills; the rest still work by name.
+3. **Make one daily automation** at 5:00 in their time zone, unless they want another time. If another of
+   their Doods already syncs any of the same folders (its record in `~/library/skill-sync/` says when),
+   pick a time at least 15 minutes away. The automation's instructions are "Use skill-sync. Sources: "
+   and the sources as chosen, for example "my laptop, every skill in ~/.claude/skills except drafts; my
+   server, from ~/.agents/skills: writing, research."
+4. **Run the first sync now.**
 
-To change what is synced later, they edit the automation, or ask you to.
+## Sources
 
-## What you are told
-
-The request (usually an automation's instructions) names one or more **sources**. Each source is a
-computer you can use and the skills on it, given in any of these ways:
-
-- A skill folder, such as `~/.agents/skills/writing-voice`. The folder's name is the skill's name.
-- A folder of skills plus names, such as "from `~/.agents/skills`: writing-voice, research".
-- A whole folder of skills, such as "every skill in `~/.claude/skills`", optionally "except" some names.
-  A skill folder is any folder directly inside it that holds a `SKILL.md`.
-
-Only the skills named this way are synced. Your other skills are yours alone, and other folders on the
-computer are left alone. If two sources offer the same skill name, the one named first is synced and the
-other is reported.
-
-A computer that is not reachable right now is skipped for this run and reported; nothing about its skills
-changes.
+Each source is a computer and some skills on it: a skill folder, a folder plus names, or a whole folder
+with optional exceptions. Only those skills are synced. If two sources offer the same name, the first
+wins and you report the other. A computer you cannot reach is skipped this run.
 
 ## Your copy
 
-Your copy of a skill is the one in your own skill list, which you manage with your skill tool: `list`
-shows them, `view` reads one (and its other files, with `path`), `create` adds one, and `write_file` and
-`patch` change its files. Your copy is never a folder on a computer. Copying files into a folder does not
-give you the skill; only the skill tool does. After a run, every synced skill must show in `list`.
+Your copy of a skill is the one your skill tool keeps: `list`, `view`, `create`, `write_file`, `patch`,
+`remove_file`. It is never a folder you made. After a run, every synced skill shows in `list`.
 
-## The record
+## Fingerprints and the record
 
-Keep a record in your Library at `~/library/skill-sync/<your name>.json` (create it if needed). For each
-synced skill it holds where the skill came from, the **fingerprint** both copies had at the last sync,
-and when:
-
-```json
-{ "skills": { "writing-voice": { "source": "my-server:~/.agents/skills/writing-voice", "files": { "SKILL.md": "3f1a...", "references/examples.md": "9c0b..." }, "syncedAt": "2026-10-13T08:00:00Z" } } }
-```
-
-A skill's fingerprint is the list of its files, each with the hash of its contents. From inside the
-skill's folder:
+A fingerprint is each file's path and content hash. On the source, from inside the skill's folder:
 
 ```sh
 find . -type f ! -name .DS_Store ! -name '*.pyc' ! -path '*/__pycache__/*' -exec sha256sum {} +
 ```
 
-On a Mac use `shasum -a 256` in place of `sha256sum`. Each line is a hash and a file path. Two
-fingerprints are equal when they hold the same paths with the same hashes, whatever order the lines come
-in; compare them yourself, path by path, instead of sorting or combining them in the shell, since sorting
-differs between machines. Fingerprint your own copy the same way: read each of its files with your skill
-tool, write them into a scratch folder in your working folder, run the command there, then remove the
-scratch folder. Do not compare file dates; copying a file changes its date without changing it.
+(`shasum -a 256` on a Mac.) For your copy, `view` the skill: Do Computer writes its files to a folder on
+the computer you are working on, `.agents/skills/<name>` in your working folder. Hash exactly the files
+the skill lists, in that folder. Compare fingerprints path by path, never by file dates or by sorting
+lines, since sorting differs between machines.
+
+Keep the record at `~/library/skill-sync/<your name>.json`: your automation's time, and for each skill
+its source, the fingerprint both sides had after the last sync, and when.
+
+```json
+{ "time": "05:00", "skills": { "writing": { "source": "my-server:~/.agents/skills/writing", "files": { "SKILL.md": "3f1a…" }, "syncedAt": "2026-10-13T08:00:00Z" } } }
+```
 
 ## Each run
 
-For every skill, fingerprint the source folder (F) and your copy (Y), compare both with the record (R),
-and do exactly one of these:
+For each skill, compare the source (F) and your copy (Y) with the record (R):
 
 | Situation | Do |
 |---|---|
-| F = Y | Nothing, except write the fingerprint to the record if it is missing. |
-| F changed, Y = R | Update your skill from the folder. |
-| Y changed, F = R | Write your version into the folder, file by file. |
-| Both changed | Merge (below), then write the result to both. |
-| Folder exists, you have no copy | Create your skill from the folder. |
-| You have it, the folder is gone | Stop syncing it: keep your copy, drop it from the record, report it. |
-| Neither exists | Report the path as wrong. |
+| F = Y | Nothing; record the fingerprint if it is missing. |
+| F changed, Y = R | Update your copy from the source. |
+| Y changed, F = R | Update the source from your copy. |
+| Both changed, or both exist with no record | Merge, then write the result to both. |
+| Only the source exists | Create your copy. |
+| Only your copy exists | Stop syncing it, keep your copy, and report it. |
+| Neither exists | Report the path. |
 
-After a change, fingerprint both again. They must match; if they do not, say so and leave that skill's
-record as it was, so the next run tries again. Then save the record.
+Updating a side means making its files match, including removing a file the other side no longer has.
+Then fingerprint both again; if they differ, report it and leave that record entry as it was.
 
-## Merging
-
-When both copies changed, make one skill that keeps every real change from both sides: added steps, fixed
-facts, new examples, tightened wording. Where the two truly contradict, keep the folder's version, since
-the person's other tools already use it, and note the conflict. Keep the frontmatter valid, with `name`
-matching the folder and a `description`. Do not restyle or shorten text that only one side touched.
+**Merging** keeps every real change from both sides. Where they truly contradict, keep the source's
+version, since the person's other tools already use it, and report the conflict. Keep `name` equal to
+the folder name.
 
 ## Report
 
-End every run with one short message in the chat the run belongs to:
-
-- What changed, one line per skill and direction ("writing-voice: the edit on my-server came in";
-  "slide-formatter: my fix went out").
-- For each merge: what came from each side, and any conflict and how you settled it.
-- Computers skipped and anything you could not do, with the reason.
-
-When nothing changed, say "Skills in sync" and nothing more.
+Reply in the run's chat with one line per change ("writing: edit from my server came in"; "research: my
+fix went out"), what each merge took from each side, and anything skipped. If nothing changed and an
+automation started the run, reply exactly `[SILENT]` so no message is posted; if the person asked, say
+"Skills in sync."
 
 ## Rules
 
-- Never touch a skill or folder that the request does not name.
-- Never delete anything. Report instead.
-- Skills you write yourself stay yours until the person names them in a source.
-- Syncing moves and merges. It does not change what a skill says.
-- Do not sync this skill itself. It is installed from wherever the person got it and updated from there.
+- Never delete a whole skill or source folder, and never touch skills the sources do not name.
+- Syncing moves and merges. It does not rewrite what a skill says.
+- Do not sync this skill. It updates from wherever it was installed from.

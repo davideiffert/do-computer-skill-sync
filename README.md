@@ -26,10 +26,10 @@ every file in the skill.
 | Only the Dood's copy | The folder is updated. |
 | Both | The Dood merges the two, keeping every real change, and writes the result to both. On a true conflict the folder's version wins. |
 | A skill appeared in the folder | The Dood gets it. |
-| A folder disappeared | Syncing stops for that skill and it is reported. |
+| A folder disappeared | Syncing stops for that skill, the Dood keeps its copy, and it is reported. |
 
 It ends with one short message in the automation's chat: what moved, what was merged, and anything
-skipped. When nothing changed it says "Skills in sync".
+skipped. On days when nothing changed, it posts nothing.
 
 ## What it can touch
 
@@ -38,7 +38,8 @@ skipped. When nothing changed it says "Skills in sync".
 - **Keeps** a small record in your Library (`skill-sync/<Dood name>.json`).
 - **Creates** one daily automation when you set it up.
 
-The Dood is told never to delete a skill or folder and never to touch skills you did not name. Those are
+The Dood is told never to delete a whole skill or folder and never to touch skills you did not name. It
+only removes a file inside a synced skill when the other side removed it. Those are
 instructions to the model, not code.
 
 ## Limits
